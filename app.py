@@ -4,6 +4,7 @@ import pandas as pd
 from flask import Flask, request, jsonify, render_template
 import pickle
 import datetime as dt
+from datetime import date, timedelta
 
 # Create flask app
 app = Flask(__name__)
@@ -15,8 +16,12 @@ def Home():
 
 @app.route("/predict", methods = ["GET","POST"])
 def predict():
+    startpoint = date.today()
+    start = startpoint.strftime('%m/%d/%Y')
+    endpoint = startpoint+ timedelta(days = 180)
+    end = endpoint.strftime('%m/%d/%Y')
 
-    x_future_date = pd.date_range(start ="2022-08-01", end = "2023-01-31")
+    x_future_date = pd.date_range(start = start, end = end)
 
     x_future_dates = pd.DataFrame()
 
@@ -57,13 +62,27 @@ def predict():
     x_future_dates["Predicted Tickets"] = y_future_total_tickets
     x_future_dates.drop("Dates", inplace = True, axis = 1)
     model_mr = pickle.load(open("mrmodel.pkl", "rb"))
-    y_future_prediction = model_mr.predict(np.array(x_future_dates["Predicted Tickets"]).reshape(184,1))
-    #print(y_future_prediction)
+    y_future_prediction = model_mr.predict(np.array(x_future_dates["Predicted Tickets"]).reshape(181,1))
+    y_future_prediction = pd.DataFrame(y_future_prediction)
+    y_future_prediction.rename(columns = {0:'Total', 
+                                      1:'AfterSales',
+                                      2:'C4C',
+                                      3:'Dashboard',
+                                      4:'Finance',
+                                      5:'HCM',
+                                      6:'Hybris Marketing',
+                                      7:'Others',
+                                      8:'Parts',
+                                      9:'Sales',
+                                      10:'Success Factors',
+                                      11:'Warranty'}, inplace = True)
 
+    print(y_future_prediction)
 
+    df2 = y_future_prediction.to_json(orient = 'table')
     #converting nparray to list to finally convert it into json
-    future_pred = y_future_prediction.tolist()
-    return json.dumps(future_pred)
+    #future_pred = y_future_prediction.tolist()
+    return (df2)
 
 if __name__ == "__main__":
         app.run()
