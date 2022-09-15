@@ -4,7 +4,6 @@ import pandas as pd
 from flask import Flask, request, jsonify, render_template
 import pickle
 import datetime as dt
-from datetime import date, timedelta
 
 # Create flask app
 app = Flask(__name__)
@@ -16,12 +15,8 @@ def Home():
 
 @app.route("/predict", methods = ["GET","POST"])
 def predict():
-    startpoint = date.today()
-    start = startpoint.strftime('%m/%d/%Y')
-    endpoint = startpoint+ timedelta(days = 180)
-    end = endpoint.strftime('%m/%d/%Y')
 
-    x_future_date = pd.date_range(start = start, end = end)
+    x_future_date = pd.date_range(start ="2022-08-01", end = "2023-01-31")
 
     x_future_dates = pd.DataFrame()
 
@@ -62,7 +57,7 @@ def predict():
     x_future_dates["Predicted Tickets"] = y_future_total_tickets
     x_future_dates.drop("Dates", inplace = True, axis = 1)
     model_mr = pickle.load(open("mrmodel.pkl", "rb"))
-    y_future_prediction = model_mr.predict(np.array(x_future_dates["Predicted Tickets"]).reshape(181,1))
+    y_future_prediction = model_mr.predict(np.array(x_future_dates["Predicted Tickets"]).reshape(184,1))
     #print(y_future_prediction)
 
 
